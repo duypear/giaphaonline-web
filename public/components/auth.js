@@ -19,7 +19,6 @@ window.togglePassword = function (id) {
     }
 };
 
-
 /* ============================================
     2. CHUYỂN ĐỔI FORM LOGIN / REGISTER 
 ============================================ */
@@ -44,7 +43,6 @@ toggleBtn.addEventListener("click", () => {
     }
 });
 
-
 /* ============================================
     3. UI LOGIN THEO ROLE (owner / viewer)
 ============================================ */
@@ -57,6 +55,7 @@ function updateLoginUI() {
     const role = roleSelect.value;
 
     if (role === "owner") {
+        // Owner: hiện email + password, ẩn viewer code
         viewercodeInput.parentElement.style.display = "none";
         loginEmailInput.parentElement.style.display = "block";
         loginPasswordInput.parentElement.style.display = "block";
@@ -66,21 +65,21 @@ function updateLoginUI() {
         viewercodeInput.required = false;
 
     } else {
+        // Viewer: hiện viewer code + password, ẩn email
         viewercodeInput.parentElement.style.display = "block";
         loginEmailInput.parentElement.style.display = "none";
-        loginPasswordInput.parentElement.style.display = "none";
+        loginPasswordInput.parentElement.style.display = "block";
 
         viewercodeInput.required = true;
+        loginPasswordInput.required = true;
         loginEmailInput.required = false;
-        loginPasswordInput.required = false;
     }
 }
 
-// chạy khi load
+// Chạy khi load
 updateLoginUI();
-// chạy khi đổi
+// Chạy khi đổi role
 roleSelect.addEventListener("change", updateLoginUI);
-
 
 /* ============================================
     4. REGISTER OWNER
@@ -105,14 +104,14 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ full_name, email, password, confirm })
         });
-        console.log("Fetch completed", res);
+
         const data = await res.json();
-        console.log("Response data", data);
+
         if (!data.success) {
             errBox.textContent = data.message;
             return;
         }
-        console.log("Registration successful");
+
         successBox.style.display = "block";
         successBox.textContent = `Đăng ký thành công! Vui lòng đăng nhập.`;
 
@@ -120,7 +119,6 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         errBox.textContent = "Không thể kết nối server.";
     }
 });
-
 
 /* ============================================
     5. LOGIN OWNER / VIEWER
@@ -135,15 +133,18 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     let payload = {};
 
     if (role === "owner") {
+        // Owner: email + password
         payload = {
             role: "owner",
             email: loginEmailInput.value.trim(),
             password: loginPasswordInput.value.trim()
         };
     } else {
+        // Viewer: viewer_code + password
         payload = {
             role: "viewer",
-            viewer_code: viewercodeInput.value.trim()
+            viewerCode: viewercodeInput.value.trim(),
+            password: loginPasswordInput.value.trim()
         };
     }
 
@@ -161,10 +162,12 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
             return;
         }
 
+        // Lưu thông tin vào localStorage
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('userName', data.user.full_name);
         localStorage.setItem('userRole', data.user.role);
 
+        // Redirect to dashboard
         window.location.href = "/dashboard";
 
     } catch (e) {

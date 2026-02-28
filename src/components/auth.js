@@ -99,31 +99,50 @@ function loginOwner(db, email, password) {
 /* ============================================================
    LOGIN VIEWER
 ============================================================ */
-function loginViewer(db, viewerCode) {
+/* ============================================================
+   LOGIN VIEWER
+============================================================ */
+/* ============================================================
+   LOGIN VIEWER - CÓ KIỂM TRA PASSWORD
+============================================================ */
+function loginViewer(db, viewerCode, password) {
     return new Promise((resolve) => {
-        db.get(`SELECT * FROM users WHERE viewer_code = ?`, [viewerCode.toUpperCase()], (err, user) => {
+        db.get(`SELECT * FROM users WHERE viewer_code = ? AND role = 'viewer'`, [viewerCode.toUpperCase()], (err, user) => {
             if (err || !user) {
-                return resolve({ success: false, message: "Code không hợp lệ!" });
+                return resolve({ success: false, message: "Mã Viewer không hợp lệ!" });
             }
 
-            // Tạo token: viewer_{owner_id}_{random 16 ký tự}
+            // Kiểm tra password
+            if (!password) {
+                return resolve({ success: false, message: "Vui lòng nhập mật khẩu!" });
+            }
+
+            // Hash password nhập vào
+            const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+
+            // So sánh với password_hash trong database
+            if (user.password_hash !== passwordHash) {
+                return resolve({ success: false, message: "Mật khẩu không đúng!" });
+            }
+
+            // Đăng nhập thành công - Tạo token
             const randomPart = crypto.randomBytes(8).toString('hex');
             const token = `viewer_${user.id}_${randomPart}`;
 
             resolve({
                 success: true,
-                message: "Truy cập Viewer thành công!",
+                message: "Đăng nhập Viewer thành công!",
                 token: token,
                 user: {
                     id: user.id,
                     full_name: user.full_name,
                     role: 'viewer',
+                    owner_id: user.owner_id
                 }
             });
         });
     });
 }
-
 module.exports = {
     register,
     loginOwner,

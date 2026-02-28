@@ -4,11 +4,8 @@ const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const cors = require("cors");
 
-const authRoutes = require("./src/routes/authRoutes");
-const dashboardRoutes = require("./src/routes/dashboardRoutes");
-
 const app = express();
-const PORT = 7060;
+const PORT = 8060;
 
 // Middleware
 app.use(cors());
@@ -18,20 +15,44 @@ app.use(express.urlencoded({ extended: true }));
 // Public folder
 const PUBLIC_DIR = path.join(__dirname, "public");
 app.use(express.static(PUBLIC_DIR));
-app.use("/api/auth", authRoutes);
-app.use("/api/dashboard", dashboardRoutes);
 
+// ================== ĐĂNG KÝ ROUTES ==================
+const authRoutes = require("./src/routes/authRoutes");
+app.use("/api/auth", authRoutes);
+
+const dashboardRoutes = require("./src/routes/dashboardRoutes");
+app.use("/api/dashboard", dashboardRoutes);
+// ✅ THÊM ROUTE CHO CÂY GIA PHẢ
+const familyTreeRoutes = require("./src/routes/familyTreeRoutes");
+app.use("/api/dashboard", familyTreeRoutes);
+const membersRoutes = require("./src/routes/membersRoutes");
+app.use("/api/members", membersRoutes);
+
+const settingsRoutes = require("./src/routes/settingsRoutes");
+app.use("/api/settings", settingsRoutes);
+
+const viewerRoutes = require("./src/routes/viewerRoutes");
+app.use("/api/viewers", viewerRoutes);
+
+const postsRoutes = require("./src/routes/postsRoutes");
+app.use("/api/posts", postsRoutes);
+// Thêm vào sau postsRoutes
+const activityRoutes = require("./src/routes/activityRoutes");
+app.use("/api/activities", activityRoutes);
+// ================== HTML ROUTES ==================
 app.get("/", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "views", "root.html"));
 });
+
 app.get("/login", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "views", "index.html"));
 });
+
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'views', 'dashboard.html'));
+    res.sendFile(path.join(PUBLIC_DIR, 'views', 'dashboard.html'));
 });
 
-// SQLite
+// ================== DATABASE ==================
 const DB_PATH = path.join(__dirname, "database", "giapha.db");
 
 const db = new sqlite3.Database(DB_PATH, (err) => {
@@ -44,10 +65,7 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
 
 app.set("db", db);
 
-// API
-app.use("/api/auth", authRoutes);
-
-// Server start
+// ================== START SERVER ==================
 app.listen(PORT, () => {
     console.log(`🚀 Server chạy tại: http://localhost:${PORT}`);
 });

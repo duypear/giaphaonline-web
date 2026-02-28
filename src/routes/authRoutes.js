@@ -1,11 +1,24 @@
 // src/routes/authRoutes.js
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const Auth = require("../controller/authController");
+const { register, loginOwner, loginViewer } = require('../controller/authController');
 
-// Đăng ký owner
-router.post("/register", Auth.register);
+/* ============================================================
+   ROUTES
+============================================================ */
 
-// Đăng nhập owner/viewer
-router.post("/login", Auth.login);
+// POST /api/auth/register - Đăng ký owner
+router.post('/register', register);
+
+// POST /api/auth/login - Đăng nhập (owner hoặc viewer)
+router.post('/login', (req, res) => {
+  const { role } = req.body;
+
+  if (role === 'viewer') {
+    loginViewer(req, res);
+  } else {
+    loginOwner(req, res);
+  }
+});
+
 module.exports = router;

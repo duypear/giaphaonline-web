@@ -156,3 +156,17 @@ CREATE INDEX IF NOT EXISTS idx_relationships_child ON relationships(child_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_viewer_code ON users(viewer_code);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE TRIGGER IF NOT EXISTS validate_generation
+BEFORE INSERT ON people
+FOR EACH ROW
+BEGIN
+    -- Nếu generation = 1 thì bỏ qua (thủy tổ)
+    SELECT CASE
+        WHEN NEW.generation > 1 AND 
+             NOT EXISTS (
+                 SELECT 1 FROM relationships 
+                 WHERE child_id = NEW.id
+             )
+        THEN RAISE(ABORT, 'Thành viên đời > 1 phải có cha/mẹ')
+    END;
+END;
